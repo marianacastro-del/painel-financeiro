@@ -1134,25 +1134,31 @@ function renderRelatoriosPagar(){
   if(kpisLoaded && kpisData){
     relRenderBody(kpisData);
   } else {
-    // Use allorigins proxy to bypass CORS
-    fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(KPIS_URL))
-      .then(r=>r.json())
-      .then(result=>{
-        const data = JSON.parse(result.contents);
-        kpisData = data;
-        kpisLoaded = true;
-        relRenderBody(data);
-      })
-      .catch(err=>{
-        document.getElementById("rel-body").innerHTML =
-          '<div class="rel-loading">' +
-          '<i class="ti ti-wifi-off" style="font-size:32px;color:var(--red)"></i>' +
-          '<div style="font-weight:500;color:var(--text);margin-top:4px">Erro ao carregar API</div>' +
-          '<div style="font-size:12px;color:var(--text3);margin-top:4px">' + err.message + '</div>' +
-          '<a href="' + KPIS_URL + '" target="_blank" style="font-size:12px;color:var(--accent);margin-top:8px">' +
-          '<i class="ti ti-external-link"></i> Testar API diretamente</a>' +
-          '</div>';
-      });
+    // JSONP to bypass CORS
+    const cbName = "kpisJsonp_" + Date.now();
+    window[cbName] = function(data){
+      delete window[cbName];
+      const s = document.getElementById("kpis-jsonp-script");
+      if(s) s.remove();
+      kpisData = data;
+      kpisLoaded = true;
+      relRenderBody(data);
+    };
+    const s = document.createElement("script");
+    s.id = "kpis-jsonp-script";
+    s.src = KPIS_URL + "&callback=" + cbName;
+    s.onerror = function(){
+      delete window[cbName];
+      s.remove();
+      document.getElementById("rel-body").innerHTML =
+        '<div class="rel-loading">' +
+        '<i class="ti ti-wifi-off" style="font-size:32px;color:var(--red)"></i>' +
+        '<div style="font-weight:500;color:var(--text);margin-top:4px">Erro ao carregar API</div>' +
+        '<a href="' + KPIS_URL + '" target="_blank" style="font-size:12px;color:var(--accent);margin-top:8px">' +
+        'Testar API diretamente</a>' +
+        '</div>';
+    };
+    document.head.appendChild(s);
   }
 }
  
