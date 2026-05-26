@@ -991,7 +991,9 @@ function inadimSave(idx,name){
   const o=document.getElementById("ico-"+idx);
   if(!d||!m)return;
   if(!d.value||!m.value){alert("Preencha data e meio.");return;}
-  const fmt=new Date(d.value).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"2-digit"});
+  // Fix: parse date parts directly to avoid UTC timezone shift
+  const [dy,dm,dd2]=d.value.split("-");
+  const fmt=dd2+"/"+dm+"/"+(dy.slice(-2));
   if(!inadimHistory[name])inadimHistory[name]=[];
   inadimHistory[name].unshift({date:fmt,meio:m.value,obs:o?o.value:""});
   d.value="";m.value="";if(o)o.value="";
@@ -1132,16 +1134,11 @@ function renderRelatoriosPagar(){
   if(kpisLoaded && kpisData){
     relRenderBody(kpisData);
   } else {
-    // Try fetch with CORS
-    fetch(KPIS_URL, {method:"GET", mode:"cors"})
-      .then(r=>{
-        if(!r.ok) throw new Error("HTTP "+r.status);
-        return r.text();
-      })
-      .then(text=>{
-        // Clean response (Apps Script sometimes adds BOM or extra chars)
-        const clean = text.trim().replace(/^[^{[]+/,"");
-        const data = JSON.parse(clean);
+    // Use allorigins proxy to bypass CORS
+    fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(KPIS_URL))
+      .then(r=>r.json())
+      .then(result=>{
+        const data = JSON.parse(result.contents);
         kpisData = data;
         kpisLoaded = true;
         relRenderBody(data);
