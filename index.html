@@ -39,7 +39,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
 body { font-family: var(--font-body); background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
-
+ 
 /* ── TOPBAR ── */
 .topbar {
   height: var(--topbar-h);
@@ -76,7 +76,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   background: var(--border2);
   margin: 0 4px;
 }
-
+ 
 /* Module toggle buttons */
 .mod-btns { display: flex; gap: 6px; }
 .mod-btn {
@@ -94,7 +94,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .mod-btn:hover { border-color: var(--border3); color: var(--text); background: var(--bg3); }
 .mod-btn.active-pagar  { background: var(--red-bg);   border-color: rgba(232,72,85,0.35);  color: var(--red); }
 .mod-btn.active-receber{ background: var(--green-bg); border-color: rgba(26,158,107,0.3);  color: var(--green); }
-
+ 
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .tb-user {
   display: flex; align-items: center; gap: 8px;
@@ -106,12 +106,12 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 500; color: var(--text2);
 }
-
+ 
 /* ── LAYOUT ── */
 .app-body {
   flex: 1; display: flex; overflow: hidden;
 }
-
+ 
 /* ── SIDEBAR ── */
 .sidebar {
   width: var(--sidebar-w);
@@ -123,7 +123,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   transition: width 0.22s ease;
 }
 .sidebar.hidden { width: 0; overflow: hidden; border: none; }
-
+ 
 .sidebar-section { padding: 16px 12px 8px; }
 .sidebar-label {
   font-size: 10px; font-weight: 600;
@@ -155,7 +155,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 }
 .nav-item.active.pagar  { border-left: 2px solid var(--red);   color: var(--red); }
 .nav-item.active.receber{ border-left: 2px solid var(--green); color: var(--green); }
-
+ 
 .sidebar-sub { padding: 0 12px 8px; }
 .sub-label {
   font-size: 10px; font-weight: 600;
@@ -176,14 +176,14 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .nav-sub i { font-size: 14px; flex-shrink: 0; }
 .nav-sub:hover { background: var(--bg3); color: var(--text); }
 .nav-sub.active { background: var(--bg4); color: var(--green); font-weight: 500; }
-
+ 
 /* ── CONTENT ── */
 .content {
   flex: 1; overflow-y: auto;
   padding: 32px;
   background: var(--bg);
 }
-
+ 
 /* ── HOME SCREEN ── */
 .home-screen {
   display: flex; flex-direction: column;
@@ -243,7 +243,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   transition: color 0.15s;
 }
 .home-card:hover .home-card-arrow { color: var(--text2); }
-
+ 
 /* ── PAGE CONTENT ── */
 .page { animation: fadeUp 0.3s ease both; }
 .page-header { margin-bottom: 28px; }
@@ -254,7 +254,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   letter-spacing: -0.02em;
 }
 .page-header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
-
+ 
 .placeholder-card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -279,7 +279,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   background: var(--bg4); border: 1px solid var(--border2);
   color: var(--text3);
 }
-
+ 
 /* ── BREADCRUMB ── */
 .breadcrumb {
   display: flex; align-items: center; gap: 6px;
@@ -288,17 +288,17 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 }
 .breadcrumb span { color: var(--text2); }
 .breadcrumb i { font-size: 12px; }
-
+ 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
+ 
 /* scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 4px; }
-
+ 
   /* ── INADIMPLENTES PAGE ── */
   .inadim-wrap { animation: fadeUp 0.3s ease both; }
   .inadim-stats {
@@ -320,7 +320,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   .isc-icon.igreen { background: rgba(62,207,142,0.10); color: var(--green); }
   .isc-val   { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.03em; line-height:1; }
   .isc-label { font-size: 11px; color: var(--text2); }
-
+ 
   .inadim-filterbar {
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 14px; flex-wrap: wrap;
@@ -347,7 +347,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     color: var(--text); padding: 7px 0; width: 170px;
   }
   .isearch-wrap input::placeholder { color: var(--text3); }
-
+ 
   .itable-wrap {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: var(--r-lg); overflow: hidden;
@@ -371,7 +371,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   }
   .iexpand-inner { display:none; padding: 18px 20px; }
   .iexpand-inner.open { display:block; }
-
+ 
   .iclient-cell { display:flex; align-items:center; gap:10px; }
   .iavatar {
     width:32px; height:32px; border-radius:50%;
@@ -381,7 +381,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   }
   .iclient-name { font-weight:500; font-size:13px; color: var(--text); }
   .iclient-sub  { font-size:11px; color: var(--text3); margin-top:1px; }
-
+ 
   .ibadge {
     display:inline-flex; align-items:center; gap:3px;
     font-size:11px; padding:2px 8px; border-radius:20px; font-weight:500;
@@ -396,7 +396,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     background: var(--bg3); color: var(--text2); border:1px solid var(--border);
   }
   .ino-contact { display:inline-flex; align-items:center; gap:5px; font-size:11px; color: var(--red); }
-
+ 
   .iexp-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
   .iexp-title {
     font-size:10px; font-weight:500; color: var(--text3);
@@ -412,7 +412,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   .ip-val  { font-size:13px; color: #c0232e; font-weight:500; }
   .ip-total { text-align:right; font-size:12px; color: var(--text3); margin-top:4px; }
   .ip-total strong { color: #c0232e; }
-
+ 
   .ifld label { font-size:11px; color: var(--text3); display:block; margin-bottom:4px; }
   .ifld input,.ifld select,.ifld textarea {
     width:100%; font-family: var(--font-body); font-size:12px;
@@ -431,7 +431,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     border:none; border-radius: var(--r); color:#fff; cursor:pointer; transition:opacity 0.15s;
   }
   .ibtn-save:hover { opacity:0.85; }
-
+ 
   .ihist-item { display:flex; gap:8px; margin-bottom:8px; font-size:12px; padding-left:4px; }
   .ihist-line { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
   .ihist-dot  { width:6px; height:6px; border-radius:50%; background: var(--accent); margin-top:4px; }
@@ -439,7 +439,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   .ihist-date { color: var(--text3); font-size:11px; min-width:72px; }
   .ihist-meio { font-weight:500; color: var(--text); }
   .ihist-obs  { color: var(--text2); margin-top:1px; }
-
+ 
   .iloading,.iempty {
     padding:40px; text-align:center; color: var(--text3);
     font-size:13px; display:flex; flex-direction:column; align-items:center; gap:10px;
@@ -463,8 +463,8 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     color: var(--text2); cursor:pointer; transition: all 0.15s;
   }
   .inadim-refresh-btn:hover { background: var(--bg4); color: var(--text); }
-
-
+ 
+ 
   /* ── RELATÓRIOS PAGAR ── */
   .rel-wrap { animation: fadeUp 0.3s ease both; }
   .rel-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
@@ -480,7 +480,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   .rsc-val   { font-size:20px;font-weight:600;color:var(--text);letter-spacing:-0.03em;line-height:1; }
   .rsc-label { font-size:11px;color:var(--text2); }
   .rsc-sub   { font-size:11px;color:var(--text3); }
-
+ 
   .rel-charts { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
   .rel-chart-card {
     background:var(--bg2); border:1px solid var(--border);
@@ -494,7 +494,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   }
   .rel-chart-wrap { position:relative; height:220px; }
   .rel-chart-wrap.tall { height:280px; }
-
+ 
   .rel-filters {
     display:flex; align-items:center; gap:10px;
     margin-bottom:16px; flex-wrap:wrap;
@@ -509,7 +509,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
   }
   .rchip:hover { border-color:var(--border3);color:var(--text); }
   .rchip.active { background:var(--text);color:var(--bg);border-color:var(--text);font-weight:500; }
-
+ 
   .rel-table-wrap {
     background:var(--bg2);border:1px solid var(--border);
     border-radius:var(--r-lg);overflow:hidden;margin-top:16px;
@@ -541,11 +541,11 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     color:var(--text2);cursor:pointer;transition:all 0.15s;
   }
   .rel-refresh-btn:hover { background:var(--bg4);color:var(--text); }
-
+ 
 </style>
 </head>
 <body>
-
+ 
 <!-- TOPBAR -->
 <header class="topbar">
   <a class="logo" href="#" onclick="goHome()">
@@ -567,13 +567,13 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     </div>
   </div>
 </header>
-
+ 
 <!-- BODY -->
 <div class="app-body">
-
+ 
   <!-- SIDEBAR -->
   <nav class="sidebar hidden" id="sidebar">
-
+ 
     <!-- PAGAR MENU -->
     <div id="menu-pagar" style="display:none">
       <div class="sidebar-section">
@@ -589,7 +589,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
         </div>
       </div>
     </div>
-
+ 
     <!-- RECEBER MENU -->
     <div id="menu-receber" style="display:none">
       <div class="sidebar-section">
@@ -620,12 +620,12 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
         </div>
       </div>
     </div>
-
+ 
   </nav>
-
+ 
   <!-- CONTENT -->
   <main class="content" id="content">
-
+ 
     <!-- HOME -->
     <div class="home-screen" id="home-screen">
       <div class="home-logo">
@@ -650,17 +650,17 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
         </div>
       </div>
     </div>
-
+ 
     <!-- PAGE VIEW (hidden until navigation) -->
     <div id="page-view" style="display:none"></div>
-
+ 
   </main>
 </div>
-
+ 
 <script>
 let currentModule = null;
 let currentPage   = null;
-
+ 
 const PAGES = {
   "pagar-fluxo": {
     icon: "ti-wave-sine",
@@ -735,7 +735,7 @@ const PAGES = {
     placeholder: "Relatórios de receita, inadimplência, churn e projeções do Vende-C Corp."
   }
 };
-
+ 
 function goHome() {
   currentModule = null;
   currentPage   = null;
@@ -747,7 +747,7 @@ function goHome() {
   document.getElementById("home-screen").style.display  = "flex";
   document.getElementById("page-view").style.display    = "none";
 }
-
+ 
 function setModule(mod) {
   currentModule = mod;
   // topbar buttons
@@ -763,13 +763,13 @@ function setModule(mod) {
   if (mod === "pagar")   navigate("pagar",   "fluxo");
   if (mod === "receber") navigate("receber", "pass-inadimplentes");
 }
-
+ 
 function navigate(mod, page) {
   currentPage = page;
   const key   = mod + "-" + page;
   const p     = PAGES[key];
   if (!p) return;
-
+ 
   // clear active states
   document.querySelectorAll(".nav-item, .nav-sub").forEach(el => el.classList.remove("active"));
   // set active
@@ -786,23 +786,23 @@ function navigate(mod, page) {
     const oc = el.getAttribute("onclick") || "";
     if (oc.includes("'" + page + "'")) el.classList.add("active");
   });
-
+ 
   document.getElementById("home-screen").style.display = "none";
   document.getElementById("page-view").style.display   = "block";
-
+ 
   const bc = p.breadcrumb.map((b,i) =>
     i < p.breadcrumb.length-1
       ? `<span>${b}</span><i class="ti ti-chevron-right"></i>`
       : `<span style="color:var(--text2)">${b}</span>`
   ).join("");
-
+ 
   // Custom renderer (inadimplentes, relatorios)
   if (p.custom && typeof window[p.custom] === "function") {
     document.getElementById("page-view").innerHTML = `<div class="breadcrumb">${bc}</div>`;
     window[p.custom]();
     return;
   }
-
+ 
   document.getElementById("page-view").innerHTML = `
     <div class="page">
       <div class="breadcrumb">${bc}</div>
@@ -818,21 +818,21 @@ function navigate(mod, page) {
       </div>
     </div>`;
 }
-
-
+ 
+ 
 // ═══════════════════════════════════════════════
 //  PASS INADIMPLENTES — dados da planilha
 // ═══════════════════════════════════════════════
 const INADIM_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTm_yovfakBbaeWtuz9sduAdkRxfBiJbCa5RiHZ5holZxR9Mkf47cvA94-N0xZux8y8bRKsWjBQEzLI/pub?gid=704687299&single=true&output=csv";
 const MEIO_ICON = {WhatsApp:"ti-brand-whatsapp",Telefone:"ti-phone",Email:"ti-mail",Presencial:"ti-user"};
-
+ 
 let inadimData       = [];
 let inadimHistory    = {};
 let inadimVendedor   = "Todos";
 let inadimSearch     = "";
 let inadimExpanded   = null;
 let inadimLoaded     = false;
-
+ 
 function ininitials(n){ return (n||"").split(" ").filter(w=>w).slice(0,2).map(w=>w[0]).join("").toUpperCase()||"?"; }
 function parseCur(s){
   if(!s)return 0;
@@ -857,7 +857,7 @@ function parseCur(s){
   return isNaN(n)?0:n;
 }
 function fmtBRL(v){ return "R$ "+Math.round(v).toLocaleString("pt-BR"); }
-
+ 
 function inadimGroupClients(rows){
   const map={};
   rows.forEach(r=>{
@@ -877,7 +877,7 @@ function inadimGroupClients(rows){
   });
   return Object.values(map);
 }
-
+ 
 function inadimFiltered(){
   return inadimData.filter(c=>{
     const vOk=inadimVendedor==="Todos"||c.vendor===inadimVendedor;
@@ -885,7 +885,7 @@ function inadimFiltered(){
     return vOk&&sOk;
   });
 }
-
+ 
 function inadimRenderStats(clients){
   const el=id=>document.getElementById(id);
   if(!el("is-total"))return;
@@ -894,7 +894,7 @@ function inadimRenderStats(clients){
   el("is-parcelas").textContent=clients.reduce((s,c)=>s+c.parcelas.length,0);
   el("is-sem").textContent=clients.filter(c=>!(inadimHistory[c.name]&&inadimHistory[c.name].length)).length;
 }
-
+ 
 function inadimRenderChips(clients){
   const vendors=["Todos",...new Set(clients.map(c=>c.vendor).filter(Boolean))];
   const container=document.getElementById("ichips");
@@ -909,7 +909,7 @@ function inadimRenderChips(clients){
     container.appendChild(chip);
   });
 }
-
+ 
 function inadimRenderTable(){
   const clients=inadimFiltered();
   const container=document.getElementById("itable-container");
@@ -944,7 +944,7 @@ function inadimRenderTable(){
   html+="</tbody></table>";
   container.innerHTML=html;
 }
-
+ 
 function inadimToggle(idx){
   const clients=inadimFiltered();
   const c=clients[idx];
@@ -984,7 +984,7 @@ function inadimToggle(idx){
   </div>`;
   inner.classList.add("open");
 }
-
+ 
 function inadimSave(idx,name){
   const d=document.getElementById("icd-"+idx);
   const m=document.getElementById("icm-"+idx);
@@ -1006,7 +1006,7 @@ function inadimSave(idx,name){
   inadimRenderTable();
   setTimeout(()=>{const inn=document.getElementById("iexp-"+idx);if(inn&&!inn.classList.contains("open"))inadimToggle(idx);},30);
 }
-
+ 
 function inadimLoad(){
   const tc=document.getElementById("itable-container");
   const badge=document.getElementById("inadim-badge");
@@ -1029,7 +1029,7 @@ function inadimLoad(){
     }
   });
 }
-
+ 
 function renderPassInadimplentes(){
   const pv=document.getElementById("page-view");
   const existing=pv.querySelector(".page");
@@ -1049,14 +1049,14 @@ function renderPassInadimplentes(){
         <button class="inadim-refresh-btn" onclick="inadimLoad()"><i class="ti ti-refresh" style="font-size:14px"></i> Atualizar</button>
       </div>
     </div>
-
+ 
     <div class="inadim-stats">
       <div class="isc"><div class="isc-icon ired"><i class="ti ti-users"></i></div><div class="isc-val" id="is-total">—</div><div class="isc-label">Clientes inadimplentes</div></div>
       <div class="isc"><div class="isc-icon ired"><i class="ti ti-currency-dollar"></i></div><div class="isc-val" id="is-valor">—</div><div class="isc-label">Valor total em aberto</div></div>
       <div class="isc"><div class="isc-icon iamber"><i class="ti ti-receipt"></i></div><div class="isc-val" id="is-parcelas">—</div><div class="isc-label">Parcelas em aberto</div></div>
       <div class="isc"><div class="isc-icon iblue"><i class="ti ti-message-off"></i></div><div class="isc-val" id="is-sem">—</div><div class="isc-label">Sem contato registrado</div></div>
     </div>
-
+ 
     <div class="inadim-filterbar">
       <span class="inadim-filter-label"><i class="ti ti-user" style="font-size:13px;vertical-align:-1px;margin-right:3px"></i>Vendedor</span>
       <div class="ichips" id="ichips"></div>
@@ -1065,17 +1065,17 @@ function renderPassInadimplentes(){
         <input type="text" id="isearch" placeholder="Buscar cliente..." oninput="inadimSearch=this.value;inadimExpanded=null;inadimRenderTable()"/>
       </div>
     </div>
-
+ 
     <div class="itable-wrap">
       <div id="itable-container"><div class="iloading"><span class="ispin"></span>Aguardando...</div></div>
     </div>
-
+ 
     <div class="inadim-footer">
       Dados via Google Sheets ·
       <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vTm_yovfakBbaeWtuz9sduAdkRxfBiJbCa5RiHZ5holZxR9Mkf47cvA94-N0xZux8y8bRKsWjBQEzLI/pubhtml" target="_blank">Abrir planilha</a>
     </div>
   </div>`;
-
+ 
   if(inadimLoaded){
     inadimRenderStats(inadimData);
     inadimRenderChips(inadimData);
@@ -1086,8 +1086,8 @@ function renderPassInadimplentes(){
     inadimLoad();
   }
 }
-
-
+ 
+ 
 // ═══════════════════════════════════════════════
 //  RELATÓRIOS — CONTAS A PAGAR
 // ═══════════════════════════════════════════════
@@ -1096,21 +1096,21 @@ let kpisData = null;
 let kpisLoaded = false;
 let relCompetencia = "Todas";
 let relCharts = {};
-
+ 
 function fmtMoeda(v){
   return "R$ " + (Math.round(v)).toLocaleString("pt-BR");
 }
-
+ 
 function relDestroyCharts(){
   Object.values(relCharts).forEach(c=>{ try{c.destroy();}catch(e){} });
   relCharts = {};
 }
-
+ 
 function renderRelatoriosPagar(){
   const pv = document.getElementById("page-view");
   const existing = pv.querySelector(".breadcrumb");
   const bcHtml = existing ? existing.outerHTML : "";
-
+ 
   pv.innerHTML = `
   <div class="rel-wrap">
     ${bcHtml}
@@ -1128,7 +1128,7 @@ function renderRelatoriosPagar(){
     </div>
     <div id="rel-body"><div class="rel-loading"><span class="rspin"></span>Carregando dados da planilha...</div></div>
   </div>`;
-
+ 
   if(kpisLoaded && kpisData){
     relRenderBody(kpisData);
   } else {
@@ -1158,14 +1158,14 @@ function renderRelatoriosPagar(){
       });
   }
 }
-
+ 
 function relRenderBody(data){
   const badge = document.getElementById("rel-badge");
   if(badge) badge.textContent = "Gerado " + (data.geradoEm||"");
-
+ 
   // Get competencias for filter
   const competencias = ["Todas", ...Object.keys(data.porCompetencia||{}).sort()];
-
+ 
   const filtersHtml = `
     <div class="rel-filters">
       <span class="rel-filter-label"><i class="ti ti-calendar" style="font-size:13px;vertical-align:-1px;margin-right:3px"></i>Competência</span>
@@ -1173,40 +1173,40 @@ function relRenderBody(data){
         ${competencias.map(c=>`<button class="rchip${c===relCompetencia?" active":""}" onclick="relSetComp('${c}')">${c}</button>`).join("")}
       </div>
     </div>`;
-
+ 
   // Filter data by competencia
   const filteredLanc = relCompetencia === "Todas"
     ? (data.lancamentos||[])
     : (data.lancamentos||[]).filter(l=>l.competencia===relCompetencia);
-
+ 
   // Recalc totals for filtered
   let totalFilt=0, pagoFilt=0, pendFilt=0;
   filteredLanc.forEach(l=>{ totalFilt+=l.valor; if(l.pago)pagoFilt+=l.valor; else pendFilt+=l.valor; });
-
+ 
   // Category breakdown for filtered
   const catFilt = {};
   filteredLanc.forEach(l=>{ if(l.categoria) catFilt[l.categoria]=(catFilt[l.categoria]||0)+l.valor; });
-
+ 
   // Sub breakdown for filtered
   const subFilt = {};
   filteredLanc.forEach(l=>{ if(l.subcategoria) subFilt[l.subcategoria]=(subFilt[l.subcategoria]||0)+l.valor; });
-
+ 
   // Sort categories
   const catSorted = Object.entries(catFilt).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const subSorted = Object.entries(subFilt).sort((a,b)=>b[1]-a[1]).slice(0,12);
-
+ 
   // Months sorted
   const mesSorted = Object.entries(data.porMes||{}).sort((a,b)=>{
     const [ma,ya]=a[0].split("/"); const [mb,yb]=b[0].split("/");
     return new Date(ya,ma-1)-new Date(yb,mb-1);
   }).slice(-12);
-
+ 
   // Top 5 recent transactions
   const recentes = filteredLanc.slice(0,50);
-
+ 
   document.getElementById("rel-body").innerHTML = `
     ${filtersHtml}
-
+ 
     <div class="rel-stats">
       <div class="rsc">
         <div class="rsc-icon rred"><i class="ti ti-currency-dollar"></i></div>
@@ -1227,7 +1227,7 @@ function relRenderBody(data){
         <div class="rsc-sub">${relCompetencia==="Todas"?((data.totalPendente/data.totalGeral*100)||0).toFixed(1):((pendFilt/totalFilt*100)||0).toFixed(1)}% do total</div>
       </div>
     </div>
-
+ 
     <div class="rel-charts">
       <div class="rel-chart-card">
         <div class="rel-chart-title">Despesas por mês</div>
@@ -1246,7 +1246,7 @@ function relRenderBody(data){
         <div class="rel-chart-wrap tall"><canvas id="chart-sub"></canvas></div>
       </div>
     </div>
-
+ 
     <div class="rel-table-wrap">
       <table class="rel-table">
         <thead><tr>
@@ -1273,19 +1273,19 @@ function relRenderBody(data){
         </tbody>
       </table>
     </div>`;
-
+ 
   // Render charts after DOM update
   setTimeout(()=>relDrawCharts(mesSorted, catSorted, subSorted,
     relCompetencia==="Todas"?data.totalPago:pagoFilt,
     relCompetencia==="Todas"?data.totalPendente:pendFilt), 50);
 }
-
+ 
 function relSetComp(comp){
   relCompetencia = comp;
   relDestroyCharts();
   relRenderBody(kpisData);
 }
-
+ 
 function relDrawCharts(mesSorted, catSorted, subSorted, pago, pendente){
   relDestroyCharts();
   const chartDefaults = {
@@ -1293,7 +1293,7 @@ function relDrawCharts(mesSorted, catSorted, subSorted, pago, pendente){
     plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: ctx=>" "+fmtMoeda(ctx.parsed.y||ctx.parsed||0) }}},
     scales:{ x:{ ticks:{ font:{size:10}, color:"#9ea3b0" }, grid:{color:"rgba(0,0,0,0.05)"} }, y:{ ticks:{ font:{size:10}, color:"#9ea3b0", callback:v=>"R$"+Math.round(v/1000)+"k" }, grid:{color:"rgba(0,0,0,0.06)"} } }
   };
-
+ 
   // 1. Mes bar chart
   const cMes = document.getElementById("chart-mes");
   if(cMes) relCharts.mes = new Chart(cMes, {
@@ -1301,7 +1301,7 @@ function relDrawCharts(mesSorted, catSorted, subSorted, pago, pendente){
     data:{ labels: mesSorted.map(m=>m[0]), datasets:[{ data: mesSorted.map(m=>m[1]), backgroundColor:"rgba(232,72,85,0.7)", borderRadius:4 }] },
     options: {...chartDefaults}
   });
-
+ 
   // 2. Doughnut pago vs pendente
   const cStatus = document.getElementById("chart-status");
   if(cStatus) relCharts.status = new Chart(cStatus, {
@@ -1309,7 +1309,7 @@ function relDrawCharts(mesSorted, catSorted, subSorted, pago, pendente){
     data:{ labels:["Pago","Pendente"], datasets:[{ data:[pago,pendente], backgroundColor:["rgba(26,158,107,0.8)","rgba(232,72,85,0.7)"], borderWidth:0 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:true, position:"bottom", labels:{ font:{size:11}, color:"#5c6070" } }, tooltip:{ callbacks:{ label: ctx=>" "+fmtMoeda(ctx.parsed) }} } }
   });
-
+ 
   // 3. Category horizontal bar
   const cCat = document.getElementById("chart-cat");
   if(cCat) relCharts.cat = new Chart(cCat, {
@@ -1320,7 +1320,7 @@ function relDrawCharts(mesSorted, catSorted, subSorted, pago, pendente){
       scales:{ x:{ ticks:{font:{size:9},color:"#9ea3b0",callback:v=>"R$"+Math.round(v/1000)+"k"}, grid:{color:"rgba(0,0,0,0.05)"} }, y:{ ticks:{font:{size:9},color:"#5c6070"}, grid:{display:false} } }
     }
   });
-
+ 
   // 4. Subcategory horizontal bar
   const cSub = document.getElementById("chart-sub");
   if(cSub) relCharts.sub = new Chart(cSub, {
@@ -1332,7 +1332,7 @@ function relDrawCharts(mesSorted, catSorted, subSorted, pago, pendente){
     }
   });
 }
-
+ 
 </script>
 </body>
 </html>
