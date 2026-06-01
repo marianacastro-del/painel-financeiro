@@ -1334,728 +1334,462 @@ function relDrawCharts(mesSorted, catSorted, subSorted, pago, pendente){
     }
   });
 }
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Vende-C · Fluxo de Caixa</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<style>
-:root {
-  --bg:        #f5f6f8;
-  --bg2:       #ffffff;
-  --bg3:       #f0f1f4;
-  --bg4:       #e8eaef;
-  --bg5:       #dddfe6;
-  --border:    rgba(0,0,0,0.07);
-  --border2:   rgba(0,0,0,0.11);
-  --border3:   rgba(0,0,0,0.18);
-  --text:      #0f1117;
-  --text2:     #5c6070;
-  --text3:     #9ea3b0;
-  --accent:    #ff0066;
-  --accent2:   #ff3385;
-  --red:       #e84855;
-  --red-bg:    rgba(232,72,85,0.08);
-  --green:     #1a9e6b;
-  --green-bg:  rgba(26,158,107,0.08);
-  --amber:     #d4820a;
-  --amber-bg:  rgba(212,130,10,0.08);
-  --font-head: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --r:         10px;
-  --r-lg:      14px;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body { font-family: var(--font-body); background: var(--bg); color: var(--text); }
 
-/* ── TOPBAR ── */
-.topbar {
-  height: 58px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center;
-  padding: 0 24px; gap: 16px;
-  position: sticky; top: 0; z-index: 50;
-}
-.logo {
-  display: flex; align-items: center; gap: 10px;
-  font-family: var(--font-head); font-size: 17px; font-weight: 700;
-  letter-spacing: -0.02em; color: var(--text); text-decoration: none;
-}
-.logo-mark {
-  width: 32px; height: 32px; background: var(--accent); border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 800; color: #fff;
-  font-family: var(--font-head); letter-spacing: -0.04em;
-}
-.divider-v { width: 1px; height: 22px; background: var(--border2); margin: 0 4px; }
-.topbar-title { font-size: 13px; font-weight: 500; color: var(--text2); }
-.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.btn-refresh {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 500; color: var(--text2);
-  background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: var(--r); padding: 6px 14px; cursor: pointer;
-  transition: all 0.15s;
-}
-.btn-refresh:hover { background: var(--bg4); color: var(--text); }
-.btn-refresh i { font-size: 14px; }
-.btn-refresh.loading i { animation: spin 0.8s linear infinite; }
-.updated-at { font-size: 11px; color: var(--text3); }
+// ═══════════════════════════════════════════════
+//  FLUXO DE CAIXA — integrado ao painel
+// ═══════════════════════════════════════════════
+const FLUXO_API_URL = "https://script.google.com/a/macros/vende-c.com/s/AKfycbwR4Al8gy-PG_ho_E_b7c58lHy3r9IEiMU6tOcIKM1SBGgtCUGiYpfOn7eTh3G15wlS/exec";
+const FLUXO_TOKEN   = "vc2025fin";
+const FLUXO_PER_PAGE = 20;
 
-/* ── CONTENT ── */
-.content { padding: 32px; max-width: 1400px; margin: 0 auto; }
+let fluxoAllData     = null;
+let fluxoFiltrados   = [];
+let fluxoPagina      = 1;
+let fluxoChartMes    = null;
+let fluxoLoaded      = false;
 
-/* ── BREADCRUMB ── */
-.breadcrumb {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--text3); margin-bottom: 20px;
-}
-.breadcrumb span { color: var(--text2); }
+function renderFluxoCaixa() {
+  const pv = document.getElementById("page-view");
+  // inject CSS for fluxo components (scoped classes)
+  if (!document.getElementById("fluxo-styles")) {
+    const s = document.createElement("style");
+    s.id = "fluxo-styles";
+    s.textContent = `
+      .fx-wrap { padding: 0; animation: fadeUp 0.3s ease both; }
+      .fx-kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+      .fx-kpi { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:20px 22px; display:flex; flex-direction:column; gap:10px; }
+      .fx-kpi-label { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:6px; }
+      .fx-kpi-val { font-family:var(--font-head); font-size:22px; font-weight:700; letter-spacing:-0.02em; }
+      .fx-kpi-val.red { color:var(--red); } .fx-kpi-val.green { color:var(--green); } .fx-kpi-val.amber { color:var(--amber); }
+      .fx-kpi-sub { font-size:11px; color:var(--text3); }
+      .fx-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:500; padding:3px 8px; border-radius:20px; width:fit-content; }
+      .fx-badge.green { background:var(--green-bg); color:var(--green); } .fx-badge.amber { background:rgba(212,130,10,0.08); color:var(--amber); }
+      .fx-filters { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:16px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+      .fx-filter-group { display:flex; align-items:center; gap:8px; }
+      .fx-filter-label { font-size:12px; color:var(--text3); font-weight:500; white-space:nowrap; }
+      .fx-select, .fx-input { font-family:var(--font-body); font-size:12px; color:var(--text); background:var(--bg3); border:1px solid var(--border2); border-radius:8px; padding:7px 12px; outline:none; transition:border-color 0.15s; appearance:none; }
+      .fx-select { padding-right:28px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ea3b0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; }
+      .fx-select:focus, .fx-input:focus { border-color:var(--accent); }
+      .fx-input { min-width:180px; }
+      .fx-btn-clear { font-size:12px; color:var(--text3); cursor:pointer; background:transparent; border:none; padding:4px 8px; font-family:var(--font-body); transition:color 0.15s; }
+      .fx-btn-clear:hover { color:var(--red); }
+      .fx-divider { width:1px; height:20px; background:var(--border2); }
+      .fx-count { margin-left:auto; font-size:11px; color:var(--text3); background:var(--bg3); border:1px solid var(--border2); padding:4px 10px; border-radius:20px; }
+      .fx-row { display:grid; gap:16px; margin-bottom:20px; }
+      .fx-row.cols-32 { grid-template-columns:3fr 2fr; }
+      .fx-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px 24px; }
+      .fx-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+      .fx-card-title { font-family:var(--font-head); font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+      .fx-card-action { font-size:11px; color:var(--text3); cursor:pointer; padding:4px 10px; border-radius:6px; border:1px solid var(--border2); background:transparent; transition:all 0.15s; font-family:var(--font-body); }
+      .fx-card-action:hover { background:var(--bg3); color:var(--text2); }
+      .fx-chart-wrap { position:relative; height:240px; }
+      .fx-cat-list { display:flex; flex-direction:column; gap:10px; }
+      .fx-cat-item { display:flex; flex-direction:column; gap:4px; }
+      .fx-cat-row { display:flex; align-items:center; justify-content:space-between; }
+      .fx-cat-name { font-size:12px; color:var(--text2); }
+      .fx-cat-val { font-size:12px; font-weight:600; color:var(--text); font-family:var(--font-head); }
+      .fx-cat-pct { font-size:11px; color:var(--text3); }
+      .fx-bar-bg { height:4px; background:var(--bg4); border-radius:4px; overflow:hidden; }
+      .fx-bar-fill { height:100%; background:var(--red); border-radius:4px; transition:width 0.6s ease; }
+      .fx-table-wrap { overflow-x:auto; }
+      .fx-table { width:100%; border-collapse:collapse; }
+      .fx-table thead th { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.07em; padding:10px 14px; text-align:left; white-space:nowrap; border-bottom:1px solid var(--border2); background:var(--bg3); }
+      .fx-table tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+      .fx-table tbody tr:hover { background:var(--bg3); }
+      .fx-table tbody td { font-size:12px; color:var(--text2); padding:10px 14px; white-space:nowrap; }
+      .fx-table tbody td.main { color:var(--text); font-weight:500; }
+      .fx-table tbody td.valor { font-family:var(--font-head); font-weight:600; color:var(--red); font-size:13px; }
+      .fx-badge-pago { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; }
+      .fx-badge-pago.sim { background:var(--green-bg); color:var(--green); }
+      .fx-badge-pago.nao { background:rgba(212,130,10,0.08); color:var(--amber); }
+      .fx-table-footer { display:flex; align-items:center; justify-content:space-between; padding:14px 0 0; border-top:1px solid var(--border2); margin-top:4px; flex-wrap:wrap; gap:10px; }
+      .fx-table-info { font-size:12px; color:var(--text3); }
+      .fx-pagination { display:flex; gap:4px; }
+      .fx-page-btn { width:30px; height:30px; border-radius:7px; background:var(--bg3); border:1px solid var(--border2); font-size:12px; color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.12s; font-family:var(--font-body); }
+      .fx-page-btn:hover { background:var(--bg4); color:var(--text); }
+      .fx-page-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+      .fx-page-btn:disabled { opacity:0.4; cursor:default; pointer-events:none; }
+      .fx-state { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; gap:14px; text-align:center; }
+      .fx-spinner { width:32px; height:32px; border:3px solid var(--bg4); border-top-color:var(--red); border-radius:50%; animation:spin 0.7s linear infinite; }
+      .fx-btn-refresh-top { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:var(--text2); background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r); padding:6px 14px; cursor:pointer; transition:all 0.15s; font-family:var(--font-body); }
+      .fx-btn-refresh-top:hover { background:var(--bg4); color:var(--text); }
+      .fx-btn-refresh-top.loading i { animation:spin 0.8s linear infinite; }
+      @media(max-width:900px){ .fx-kpi-grid{grid-template-columns:1fr 1fr;} .fx-row.cols-32{grid-template-columns:1fr;} }
+      @media(max-width:560px){ .fx-kpi-grid{grid-template-columns:1fr;} }
+    `;
+    document.head.appendChild(s);
+  }
 
-/* ── PAGE HEADER ── */
-.page-header { margin-bottom: 28px; }
-.page-header h1 {
-  font-family: var(--font-head); font-size: 22px; font-weight: 700;
-  color: var(--text); letter-spacing: -0.02em;
-  display: flex; align-items: center; gap: 10px;
-}
-.page-header h1 i { font-size: 20px; color: var(--red); }
-.page-header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
-
-/* ── KPI CARDS ── */
-.kpi-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-  margin-bottom: 24px;
-}
-.kpi-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 20px 22px;
-  display: flex; flex-direction: column; gap: 10px;
-  transition: box-shadow 0.15s;
-}
-.kpi-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-.kpi-label {
-  font-size: 11px; font-weight: 600; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 0.08em;
-  display: flex; align-items: center; gap: 6px;
-}
-.kpi-label i { font-size: 14px; }
-.kpi-value {
-  font-family: var(--font-head); font-size: 22px; font-weight: 700;
-  color: var(--text); letter-spacing: -0.02em;
-}
-.kpi-value.red   { color: var(--red); }
-.kpi-value.green { color: var(--green); }
-.kpi-value.amber { color: var(--amber); }
-.kpi-sub { font-size: 11px; color: var(--text3); }
-.kpi-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 11px; font-weight: 500; padding: 3px 8px;
-  border-radius: 20px; width: fit-content;
-}
-.kpi-badge.red   { background: var(--red-bg);   color: var(--red); }
-.kpi-badge.green { background: var(--green-bg); color: var(--green); }
-.kpi-badge.amber { background: var(--amber-bg); color: var(--amber); }
-
-/* ── SECTION LAYOUT ── */
-.section-row {
-  display: grid; gap: 16px; margin-bottom: 20px;
-}
-.section-row.cols-2  { grid-template-columns: 1fr 1fr; }
-.section-row.cols-32 { grid-template-columns: 3fr 2fr; }
-
-.card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 22px 24px;
-}
-.card-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
-}
-.card-title {
-  font-family: var(--font-head); font-size: 14px; font-weight: 700;
-  color: var(--text); letter-spacing: -0.01em;
-  display: flex; align-items: center; gap: 8px;
-}
-.card-title i { font-size: 15px; color: var(--text3); }
-.card-action {
-  font-size: 11px; color: var(--text3); cursor: pointer;
-  padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border2);
-  background: transparent; transition: all 0.15s; font-family: var(--font-body);
-}
-.card-action:hover { background: var(--bg3); color: var(--text2); }
-
-/* ── FILTROS ── */
-.filters-bar {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 16px 20px;
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-.filter-group { display: flex; align-items: center; gap: 8px; }
-.filter-label { font-size: 12px; color: var(--text3); font-weight: 500; white-space: nowrap; }
-.filter-select, .filter-input {
-  font-family: var(--font-body); font-size: 12px; color: var(--text);
-  background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: 8px; padding: 7px 12px; cursor: pointer;
-  outline: none; transition: border-color 0.15s;
-  appearance: none; -webkit-appearance: none;
-}
-.filter-select { padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ea3b0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
-.filter-select:focus, .filter-input:focus { border-color: var(--accent); }
-.filter-input { min-width: 180px; }
-.btn-clear-filters {
-  font-size: 12px; color: var(--text3); cursor: pointer;
-  background: transparent; border: none; padding: 4px 8px;
-  font-family: var(--font-body); transition: color 0.15s;
-}
-.btn-clear-filters:hover { color: var(--red); }
-.filters-divider { width: 1px; height: 20px; background: var(--border2); }
-.filter-count {
-  margin-left: auto; font-size: 11px; color: var(--text3);
-  background: var(--bg3); border: 1px solid var(--border2);
-  padding: 4px 10px; border-radius: 20px;
-}
-
-/* ── CHART ── */
-.chart-wrap { position: relative; height: 240px; }
-
-/* ── TABELA ── */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-thead th {
-  font-size: 11px; font-weight: 600; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 0.07em;
-  padding: 10px 14px; text-align: left; white-space: nowrap;
-  border-bottom: 1px solid var(--border2);
-  background: var(--bg3);
-}
-thead th:first-child { border-radius: 8px 0 0 0; }
-thead th:last-child  { border-radius: 0 8px 0 0; }
-tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background 0.1s;
-}
-tbody tr:hover { background: var(--bg3); }
-tbody tr:last-child { border-bottom: none; }
-tbody td {
-  font-size: 12px; color: var(--text2);
-  padding: 10px 14px; white-space: nowrap;
-}
-tbody td.main { color: var(--text); font-weight: 500; }
-tbody td.valor { font-family: var(--font-head); font-weight: 600; color: var(--red); font-size: 13px; }
-.badge-pago {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 10px; font-weight: 600; padding: 3px 8px;
-  border-radius: 20px; white-space: nowrap;
-}
-.badge-pago.sim  { background: var(--green-bg); color: var(--green); }
-.badge-pago.nao  { background: var(--amber-bg); color: var(--amber); }
-
-/* ── TABLE FOOTER ── */
-.table-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 0 0; border-top: 1px solid var(--border2); margin-top: 4px;
-  flex-wrap: wrap; gap: 10px;
-}
-.table-info { font-size: 12px; color: var(--text3); }
-.pagination { display: flex; gap: 4px; }
-.page-btn {
-  width: 30px; height: 30px; border-radius: 7px;
-  background: var(--bg3); border: 1px solid var(--border2);
-  font-size: 12px; color: var(--text2); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.12s; font-family: var(--font-body);
-}
-.page-btn:hover { background: var(--bg4); color: var(--text); }
-.page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-.page-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
-
-/* ── CATEGORY LIST ── */
-.cat-list { display: flex; flex-direction: column; gap: 10px; }
-.cat-item { display: flex; flex-direction: column; gap: 4px; }
-.cat-row {
-  display: flex; align-items: center; justify-content: space-between;
-}
-.cat-name { font-size: 12px; color: var(--text2); }
-.cat-val  { font-size: 12px; font-weight: 600; color: var(--text); font-family: var(--font-head); }
-.cat-pct  { font-size: 11px; color: var(--text3); }
-.cat-bar-bg {
-  height: 4px; background: var(--bg4); border-radius: 4px; overflow: hidden;
-}
-.cat-bar-fill {
-  height: 100%; background: var(--red); border-radius: 4px;
-  transition: width 0.6s ease;
-}
-
-/* ── LOADING / EMPTY ── */
-.state-center {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 300px; gap: 14px; text-align: center;
-}
-.state-center i { font-size: 36px; color: var(--text3); }
-.state-center h3 { font-family: var(--font-head); font-size: 15px; color: var(--text2); }
-.state-center p  { font-size: 12px; color: var(--text3); max-width: 280px; line-height: 1.6; }
-.spinner {
-  width: 32px; height: 32px; border: 3px solid var(--bg4);
-  border-top-color: var(--red); border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.fadeUp { animation: fadeUp 0.35s ease both; }
-
-/* scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg5); border-radius: 4px; }
-
-@media (max-width: 900px) {
-  .kpi-grid { grid-template-columns: 1fr 1fr; }
-  .section-row.cols-2, .section-row.cols-32 { grid-template-columns: 1fr; }
-}
-@media (max-width: 560px) {
-  .kpi-grid { grid-template-columns: 1fr; }
-  .content { padding: 16px; }
-}
-</style>
-</head>
-<body>
-
-<!-- TOPBAR -->
-<div class="topbar">
-  <a class="logo" href="#">
-    <div class="logo-mark">V</div>
-    Vende-C
-  </a>
-  <div class="divider-v"></div>
-  <span class="topbar-title">Financeiro</span>
-  <div class="topbar-right">
-    <span class="updated-at" id="updatedAt"></span>
-    <button class="btn-refresh" id="btnRefresh" onclick="carregarDados()">
-      <i class="ti ti-refresh"></i> Atualizar
-    </button>
-  </div>
-</div>
-
-<!-- CONTENT -->
-<div class="content">
-
-  <!-- BREADCRUMB -->
-  <div class="breadcrumb">
-    <span>Contas a Pagar</span>
-    <i class="ti ti-chevron-right"></i>
-    <span style="color:var(--text)">Fluxo de Caixa</span>
-  </div>
-
-  <!-- PAGE HEADER -->
-  <div class="page-header">
-    <h1><i class="ti ti-activity"></i> Fluxo de Caixa</h1>
-    <p>Visualização de despesas por período com filtros e detalhamento</p>
-  </div>
-
-  <!-- LOADING STATE -->
-  <div id="loadingState" class="state-center">
-    <div class="spinner"></div>
-    <h3>Carregando dados...</h3>
-    <p>Buscando lançamentos da planilha</p>
-  </div>
-
-  <!-- MAIN CONTENT (hidden until loaded) -->
-  <div id="mainContent" style="display:none">
-
-    <!-- KPI CARDS -->
-    <div class="kpi-grid fadeUp">
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="ti ti-stack" style="color:var(--text3)"></i> Total Geral</div>
-        <div class="kpi-value red" id="kpiTotal">—</div>
-        <div class="kpi-sub" id="kpiTotalQtd">— lançamentos</div>
+  pv.innerHTML = `
+  <div class="fx-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <h1 style="font-family:var(--font-head);font-size:20px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:10px">
+          <i class="ti ti-activity" style="font-size:18px;color:var(--red)"></i>Fluxo de Caixa
+        </h1>
+        <p style="font-size:13px;color:var(--text2);margin-top:4px">Visualização de despesas por período com filtros e detalhamento</p>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="ti ti-circle-check" style="color:var(--green)"></i> Pago</div>
-        <div class="kpi-value green" id="kpiPago">—</div>
-        <div class="kpi-badge green" id="kpiPagoPct">—%</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="ti ti-clock" style="color:var(--amber)"></i> Pendente</div>
-        <div class="kpi-value amber" id="kpiPendente">—</div>
-        <div class="kpi-badge amber" id="kpiPendentePct">—%</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="ti ti-eye" style="color:var(--text3)"></i> Previsão</div>
-        <div class="kpi-value" id="kpiPrevisao">—</div>
-        <div class="kpi-sub">Itens marcados como previsão</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;color:var(--text3)" id="fx-updated"></span>
+        <button class="fx-btn-refresh-top" id="fx-btn-refresh" onclick="fluxoCarregar()">
+          <i class="ti ti-refresh"></i> Atualizar
+        </button>
       </div>
     </div>
 
-    <!-- FILTROS -->
-    <div class="filters-bar fadeUp">
-      <div class="filter-group">
-        <span class="filter-label"><i class="ti ti-calendar"></i> Competência</span>
-        <select class="filter-select" id="filtroCompetencia" onchange="aplicarFiltros()">
-          <option value="">Todos os meses</option>
-        </select>
-      </div>
-      <div class="filters-divider"></div>
-      <div class="filter-group">
-        <span class="filter-label"><i class="ti ti-folder"></i> Categoria</span>
-        <select class="filter-select" id="filtroCategoria" onchange="aplicarFiltros()">
-          <option value="">Todas</option>
-        </select>
-      </div>
-      <div class="filters-divider"></div>
-      <div class="filter-group">
-        <span class="filter-label"><i class="ti ti-circle-check"></i> Status</span>
-        <select class="filter-select" id="filtroStatus" onchange="aplicarFiltros()">
-          <option value="">Todos</option>
-          <option value="pago">Pago</option>
-          <option value="pendente">Pendente</option>
-        </select>
-      </div>
-      <div class="filters-divider"></div>
-      <div class="filter-group">
-        <span class="filter-label"><i class="ti ti-search"></i></span>
-        <input class="filter-input" type="text" id="filtroTexto" placeholder="Buscar descrição ou fornecedor..." oninput="aplicarFiltros()"/>
-      </div>
-      <button class="btn-clear-filters" onclick="limparFiltros()"><i class="ti ti-x"></i> Limpar</button>
-      <span class="filter-count" id="filtroCount">— registros</span>
+    <div id="fx-loading" class="fx-state">
+      <div class="fx-spinner"></div>
+      <p style="font-size:13px;color:var(--text2);font-weight:500">Carregando dados...</p>
+      <p style="font-size:12px;color:var(--text3)">Buscando lançamentos da planilha</p>
     </div>
 
-    <!-- CHARTS ROW -->
-    <div class="section-row cols-32 fadeUp">
-      <!-- Gráfico por mês -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title"><i class="ti ti-chart-bar"></i> Despesas por Período</div>
-          <div style="display:flex;gap:12px;align-items:center">
-            <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green)"><span style="width:10px;height:10px;background:var(--green);border-radius:2px;display:inline-block"></span>Pago</span>
-            <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--amber)"><span style="width:10px;height:10px;background:var(--amber);border-radius:2px;display:inline-block"></span>Pendente</span>
+    <div id="fx-main" style="display:none">
+      <div class="fx-kpi-grid">
+        <div class="fx-kpi">
+          <div class="fx-kpi-label"><i class="ti ti-stack"></i> Total Geral</div>
+          <div class="fx-kpi-val red" id="fx-kpi-total">—</div>
+          <div class="fx-kpi-sub" id="fx-kpi-qtd">— lançamentos</div>
+        </div>
+        <div class="fx-kpi">
+          <div class="fx-kpi-label"><i class="ti ti-circle-check" style="color:var(--green)"></i> Pago</div>
+          <div class="fx-kpi-val green" id="fx-kpi-pago">—</div>
+          <div class="fx-badge green" id="fx-kpi-pago-pct">—</div>
+        </div>
+        <div class="fx-kpi">
+          <div class="fx-kpi-label"><i class="ti ti-clock" style="color:var(--amber)"></i> Pendente</div>
+          <div class="fx-kpi-val amber" id="fx-kpi-pend">—</div>
+          <div class="fx-badge amber" id="fx-kpi-pend-pct">—</div>
+        </div>
+        <div class="fx-kpi">
+          <div class="fx-kpi-label"><i class="ti ti-eye"></i> Previsão</div>
+          <div class="fx-kpi-val" id="fx-kpi-prev">—</div>
+          <div class="fx-kpi-sub">Itens de previsão</div>
+        </div>
+      </div>
+
+      <div class="fx-filters">
+        <div class="fx-filter-group">
+          <span class="fx-filter-label"><i class="ti ti-calendar"></i> Competência</span>
+          <select class="fx-select" id="fx-fil-comp" onchange="fluxoAplicarFiltros()"><option value="">Todos</option></select>
+        </div>
+        <div class="fx-divider"></div>
+        <div class="fx-filter-group">
+          <span class="fx-filter-label"><i class="ti ti-folder"></i> Categoria</span>
+          <select class="fx-select" id="fx-fil-cat" onchange="fluxoAplicarFiltros()"><option value="">Todas</option></select>
+        </div>
+        <div class="fx-divider"></div>
+        <div class="fx-filter-group">
+          <span class="fx-filter-label"><i class="ti ti-circle-check"></i> Status</span>
+          <select class="fx-select" id="fx-fil-status" onchange="fluxoAplicarFiltros()">
+            <option value="">Todos</option>
+            <option value="pago">Pago</option>
+            <option value="pendente">Pendente</option>
+          </select>
+        </div>
+        <div class="fx-divider"></div>
+        <div class="fx-filter-group">
+          <input class="fx-input" type="text" id="fx-fil-texto" placeholder="Buscar descrição ou fornecedor..." oninput="fluxoAplicarFiltros()"/>
+        </div>
+        <button class="fx-btn-clear" onclick="fluxoLimparFiltros()"><i class="ti ti-x"></i> Limpar</button>
+        <span class="fx-count" id="fx-count">—</span>
+      </div>
+
+      <div class="fx-row cols-32">
+        <div class="fx-card">
+          <div class="fx-card-header">
+            <div class="fx-card-title"><i class="ti ti-chart-bar" style="color:var(--text3)"></i> Despesas por Período</div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--green)"><span style="width:10px;height:10px;background:var(--green);border-radius:2px;display:inline-block"></span>Pago</span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--amber)"><span style="width:10px;height:10px;background:var(--amber);border-radius:2px;display:inline-block"></span>Pendente</span>
+            </div>
           </div>
+          <div class="fx-chart-wrap"><canvas id="fx-chart-mes"></canvas></div>
         </div>
-        <div class="chart-wrap">
-          <canvas id="chartMes"></canvas>
+        <div class="fx-card">
+          <div class="fx-card-header">
+            <div class="fx-card-title"><i class="ti ti-chart-donut" style="color:var(--text3)"></i> Por Categoria</div>
+          </div>
+          <div class="fx-cat-list" id="fx-cat-list"></div>
         </div>
       </div>
-      <!-- Top Categorias -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title"><i class="ti ti-chart-donut"></i> Por Categoria</div>
+
+      <div class="fx-card">
+        <div class="fx-card-header">
+          <div class="fx-card-title"><i class="ti ti-table" style="color:var(--text3)"></i> Lançamentos</div>
+          <button class="fx-card-action" onclick="fluxoExportarCSV()"><i class="ti ti-download"></i> Exportar CSV</button>
         </div>
-        <div class="cat-list" id="catList"></div>
+        <div class="fx-table-wrap">
+          <table class="fx-table">
+            <thead><tr>
+              <th>Data</th><th>Competência</th><th>Categoria</th><th>Subcategoria</th>
+              <th>Descrição</th><th>Fornecedor</th><th>NF</th>
+              <th style="text-align:right">Valor</th><th>Status</th>
+            </tr></thead>
+            <tbody id="fx-tbody"></tbody>
+          </table>
+        </div>
+        <div class="fx-table-footer">
+          <span class="fx-table-info" id="fx-table-info">—</span>
+          <div class="fx-pagination" id="fx-pagination"></div>
+        </div>
       </div>
     </div>
 
-    <!-- TABELA -->
-    <div class="card fadeUp">
-      <div class="card-header">
-        <div class="card-title"><i class="ti ti-table"></i> Lançamentos</div>
-        <button class="card-action" onclick="exportarCSV()"><i class="ti ti-download" style="font-size:13px"></i> Exportar CSV</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Competência</th>
-              <th>Categoria</th>
-              <th>Subcategoria</th>
-              <th>Descrição</th>
-              <th>Fornecedor</th>
-              <th>NF</th>
-              <th style="text-align:right">Valor</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tabelaBody"></tbody>
-        </table>
-      </div>
-      <div class="table-footer">
-        <span class="table-info" id="tableInfo">—</span>
-        <div class="pagination" id="pagination"></div>
-      </div>
+    <div id="fx-error" style="display:none" class="fx-state">
+      <i class="ti ti-wifi-off" style="font-size:36px;color:var(--text3)"></i>
+      <p style="font-size:13px;color:var(--text2);font-weight:500">Erro ao carregar dados</p>
+      <p style="font-size:12px;color:var(--text3)" id="fx-error-msg">—</p>
+      <button class="fx-btn-refresh-top" onclick="fluxoCarregar()" style="margin-top:8px"><i class="ti ti-refresh"></i> Tentar novamente</button>
     </div>
+  </div>`;
 
-  </div><!-- /mainContent -->
-
-  <!-- ERROR STATE -->
-  <div id="errorState" style="display:none" class="state-center">
-    <i class="ti ti-wifi-off"></i>
-    <h3>Erro ao carregar dados</h3>
-    <p id="errorMsg">Não foi possível conectar à planilha.</p>
-    <button class="btn-refresh" onclick="carregarDados()" style="margin-top:8px">
-      <i class="ti ti-refresh"></i> Tentar novamente
-    </button>
-  </div>
-
-</div><!-- /content -->
-
-<script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
-const API_URL = "https://script.google.com/a/macros/vende-c.com/s/AKfycbwR4Al8gy-PG_ho_E_b7c58lHy3r9IEiMU6tOcIKM1SBGgtCUGiYpfOn7eTh3G15wlS/exec";
-const TOKEN   = "vc2025fin";
-const PER_PAGE = 20;
-
-// ── STATE ────────────────────────────────────────────────────────────────────
-let allData       = null;
-let filtrados     = [];
-let paginaAtual   = 1;
-let chartMesInst  = null;
-
-// ── INIT ─────────────────────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", carregarDados);
-
-// ── FETCH ────────────────────────────────────────────────────────────────────
-function carregarDados() {
-  mostrarEstado("loading");
-  const btn = document.getElementById("btnRefresh");
-  btn.classList.add("loading");
-
-  const url = `${API_URL}?token=${TOKEN}&callback=handleFluxo`;
-  const script = document.createElement("script");
-  script.src = url;
-  script.onerror = () => mostrarErro("Erro ao conectar com o Apps Script.");
-  document.head.appendChild(script);
-
-  setTimeout(() => {
-    document.head.removeChild(script);
-    if (!allData) mostrarErro("Tempo limite excedido. Verifique a URL do Web App.");
-    btn.classList.remove("loading");
-  }, 15000);
-}
-
-function handleFluxo(dados) {
-  document.getElementById("btnRefresh").classList.remove("loading");
-  if (dados.erro) { mostrarErro(dados.erro); return; }
-  allData = dados;
-  renderizarTudo();
-}
-
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function renderizarTudo() {
-  preencherFiltros();
-  aplicarFiltros();
-  mostrarEstado("main");
-  renderKPIs(allData);
-  renderGraficoMes(allData.porMes);
-  renderCategorias(allData.porCategoria);
-  if (allData.geradoEm) {
-    document.getElementById("updatedAt").textContent = "Atualizado: " + allData.geradoEm;
+  if (fluxoLoaded && fluxoAllData) {
+    fluxoRenderizarTudo();
+  } else {
+    fluxoCarregar();
   }
 }
 
-function renderKPIs(d) {
-  document.getElementById("kpiTotal").textContent     = fmt(d.totalGeral);
-  document.getElementById("kpiTotalQtd").textContent  = d.totalLancamentos + " lançamentos";
-  document.getElementById("kpiPago").textContent      = fmt(d.totalPago);
-  document.getElementById("kpiPendente").textContent  = fmt(d.totalPendente);
-  document.getElementById("kpiPrevisao").textContent  = fmt(d.totalPrevisao);
-  const pct = d.totalGeral > 0;
-  document.getElementById("kpiPagoPct").textContent     = pct ? pctFmt(d.totalPago / d.totalGeral) + " do total" : "—";
-  document.getElementById("kpiPendentePct").textContent = pct ? pctFmt(d.totalPendente / d.totalGeral) + " do total" : "—";
+function fluxoCarregar() {
+  fluxoMostrarEstado("loading");
+  const btn = document.getElementById("fx-btn-refresh");
+  if (btn) btn.classList.add("loading");
+
+  const cbName = "fluxoJsonp_" + Date.now();
+  window[cbName] = function(dados) {
+    delete window[cbName];
+    const s = document.getElementById("fx-jsonp-script");
+    if (s) s.remove();
+    const btn2 = document.getElementById("fx-btn-refresh");
+    if (btn2) btn2.classList.remove("loading");
+    if (dados.erro) { fluxoMostrarErro(dados.erro); return; }
+    fluxoAllData = dados;
+    fluxoLoaded  = true;
+    fluxoRenderizarTudo();
+  };
+
+  const script = document.createElement("script");
+  script.id  = "fx-jsonp-script";
+  script.src = FLUXO_API_URL + "?token=" + FLUXO_TOKEN + "&callback=" + cbName;
+  script.onerror = () => {
+    delete window[cbName];
+    fluxoMostrarErro("Não foi possível conectar ao Apps Script. Verifique a URL.");
+    const btn2 = document.getElementById("fx-btn-refresh");
+    if (btn2) btn2.classList.remove("loading");
+  };
+  document.head.appendChild(script);
+
+  setTimeout(() => {
+    if (!fluxoLoaded) fluxoMostrarErro("Tempo limite excedido.");
+    const btn2 = document.getElementById("fx-btn-refresh");
+    if (btn2) btn2.classList.remove("loading");
+  }, 15000);
 }
 
-function renderGraficoMes(porMes) {
-  const entries = Object.entries(porMes).sort((a, b) => {
-    const [ma, ya] = a[0].split("/"); const [mb, yb] = b[0].split("/");
-    return new Date(ya, ma-1) - new Date(yb, mb-1);
-  });
-  const labels  = entries.map(([k]) => mesLabel(k));
-  const pagos    = entries.map(([, v]) => v.pago    || 0);
-  const pendent  = entries.map(([, v]) => v.pendente|| 0);
+function fluxoRenderizarTudo() {
+  fluxoPreencherFiltros();
+  fluxoAplicarFiltros();
+  fluxoMostrarEstado("main");
+  fluxoRenderKPIs();
+  fluxoRenderGraficoMes();
+  fluxoRenderCategorias();
+  const upd = document.getElementById("fx-updated");
+  if (upd && fluxoAllData.geradoEm) upd.textContent = "Atualizado: " + fluxoAllData.geradoEm;
+}
 
-  if (chartMesInst) chartMesInst.destroy();
-  chartMesInst = new Chart(document.getElementById("chartMes"), {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { label: "Pago",     data: pagos,   backgroundColor: "#1a9e6b", borderRadius: 4, borderSkipped: false },
-        { label: "Pendente", data: pendent, backgroundColor: "#d4820a", borderRadius: 4, borderSkipped: false }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: {
-        callbacks: { label: ctx => " " + fmt(ctx.raw) }
-      }},
-      scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { font: { family: "DM Sans", size: 11 }, color: "#9ea3b0" }},
-        y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" }, border: { display: false },
-             ticks: { font: { family: "DM Sans", size: 11 }, color: "#9ea3b0",
-               callback: v => "R$" + (v >= 1000 ? (v/1000).toFixed(0)+"k" : v) }}
+function fluxoRenderKPIs() {
+  const d = fluxoAllData;
+  document.getElementById("fx-kpi-total").textContent    = fluxoFmt(d.totalGeral);
+  document.getElementById("fx-kpi-qtd").textContent      = d.totalLancamentos + " lançamentos";
+  document.getElementById("fx-kpi-pago").textContent     = fluxoFmt(d.totalPago);
+  document.getElementById("fx-kpi-pend").textContent     = fluxoFmt(d.totalPendente);
+  document.getElementById("fx-kpi-prev").textContent     = fluxoFmt(d.totalPrevisao);
+  const pct = d.totalGeral > 0;
+  document.getElementById("fx-kpi-pago-pct").textContent = pct ? fluxoPctFmt(d.totalPago/d.totalGeral) + " do total" : "—";
+  document.getElementById("fx-kpi-pend-pct").textContent = pct ? fluxoPctFmt(d.totalPendente/d.totalGeral) + " do total" : "—";
+}
+
+function fluxoRenderGraficoMes() {
+  const pm = fluxoAllData.porMes || {};
+  const entries = Object.entries(pm).sort((a,b) => {
+    const [ma,ya] = a[0].split("/"); const [mb,yb] = b[0].split("/");
+    return new Date(ya,ma-1) - new Date(yb,mb-1);
+  });
+  const labels  = entries.map(([k]) => fluxoMesLabel(k));
+  const pagos   = entries.map(([,v]) => (v.pago   || 0));
+  const pends   = entries.map(([,v]) => (v.pendente|| 0));
+
+  if (fluxoChartMes) { try { fluxoChartMes.destroy(); } catch(e){} }
+  const ctx = document.getElementById("fx-chart-mes");
+  if (!ctx) return;
+  fluxoChartMes = new Chart(ctx, {
+    type:"bar",
+    data:{ labels, datasets:[
+      { label:"Pago",     data:pagos, backgroundColor:"#1a9e6b", borderRadius:4, borderSkipped:false },
+      { label:"Pendente", data:pends, backgroundColor:"#d4820a", borderRadius:4, borderSkipped:false }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx2 => " " + fluxoFmt(ctx2.raw) }}},
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{font:{family:"DM Sans",size:11},color:"#9ea3b0"}},
+        y:{ stacked:true, grid:{color:"rgba(0,0,0,0.05)"}, border:{display:false},
+            ticks:{font:{family:"DM Sans",size:11},color:"#9ea3b0",
+              callback: v => "R$" + (v>=1000?(v/1000).toFixed(0)+"k":v)}}
       }
     }
   });
 }
 
-function renderCategorias(porCat) {
-  const sorted = Object.entries(porCat).sort((a,b) => b[1]-a[1]).slice(0, 8);
-  const max    = sorted[0]?.[1] || 1;
-  const total  = sorted.reduce((s,[,v]) => s+v, 0);
-  const el     = document.getElementById("catList");
-  el.innerHTML = sorted.map(([nome, val]) => `
-    <div class="cat-item">
-      <div class="cat-row">
-        <span class="cat-name">${nome || "Sem categoria"}</span>
+function fluxoRenderCategorias() {
+  const cats = fluxoAllData.porCategoria || {};
+  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max   = sorted[0]?.[1] || 1;
+  const total = sorted.reduce((s,[,v])=>s+v,0);
+  const el = document.getElementById("fx-cat-list");
+  if (!el) return;
+  el.innerHTML = sorted.map(([nome,val]) => `
+    <div class="fx-cat-item">
+      <div class="fx-cat-row">
+        <span class="fx-cat-name">${nome||"Sem categoria"}</span>
         <span style="display:flex;gap:8px;align-items:center">
-          <span class="cat-pct">${pctFmt(val/total)}</span>
-          <span class="cat-val">${fmt(val)}</span>
+          <span class="fx-cat-pct">${fluxoPctFmt(val/total)}</span>
+          <span class="fx-cat-val">${fluxoFmt(val)}</span>
         </span>
       </div>
-      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${(val/max*100).toFixed(1)}%"></div></div>
-    </div>
-  `).join("");
+      <div class="fx-bar-bg"><div class="fx-bar-fill" style="width:${(val/max*100).toFixed(1)}%"></div></div>
+    </div>`).join("");
 }
 
-// ── FILTROS ──────────────────────────────────────────────────────────────────
-function preencherFiltros() {
-  const meses = [...new Set(allData.lancamentos.map(l => l.competencia))].sort((a,b) => {
-    const ord = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-    return ord.indexOf(a) - ord.indexOf(b);
-  });
-  const cats = [...new Set(allData.lancamentos.map(l => l.categoria))].sort();
-
-  const selMes = document.getElementById("filtroCompetencia");
-  meses.forEach(m => selMes.add(new Option(capitalize(m), m)));
-
-  const selCat = document.getElementById("filtroCategoria");
-  cats.forEach(c => selCat.add(new Option(c || "Sem categoria", c)));
+function fluxoPreencherFiltros() {
+  const ord = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+  const meses = [...new Set(fluxoAllData.lancamentos.map(l=>l.competencia))].sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
+  const cats  = [...new Set(fluxoAllData.lancamentos.map(l=>l.categoria))].sort();
+  const sComp = document.getElementById("fx-fil-comp");
+  const sCat  = document.getElementById("fx-fil-cat");
+  if (!sComp || !sCat) return;
+  sComp.innerHTML = '<option value="">Todos</option>';
+  meses.forEach(m => sComp.add(new Option(m.charAt(0)+m.slice(1).toLowerCase(), m)));
+  sCat.innerHTML  = '<option value="">Todas</option>';
+  cats.forEach(c  => sCat.add(new Option(c||"Sem categoria", c)));
 }
 
-function aplicarFiltros() {
-  const comp   = document.getElementById("filtroCompetencia").value;
-  const cat    = document.getElementById("filtroCategoria").value;
-  const status = document.getElementById("filtroStatus").value;
-  const texto  = document.getElementById("filtroTexto").value.toLowerCase().trim();
+function fluxoAplicarFiltros() {
+  const comp   = (document.getElementById("fx-fil-comp")||{}).value   || "";
+  const cat    = (document.getElementById("fx-fil-cat")||{}).value    || "";
+  const status = (document.getElementById("fx-fil-status")||{}).value || "";
+  const texto  = ((document.getElementById("fx-fil-texto")||{}).value || "").toLowerCase().trim();
 
-  filtrados = allData.lancamentos.filter(l => {
+  fluxoFiltrados = fluxoAllData.lancamentos.filter(l => {
     if (comp   && l.competencia !== comp) return false;
     if (cat    && l.categoria   !== cat)  return false;
     if (status === "pago"     && !l.pago) return false;
     if (status === "pendente" &&  l.pago) return false;
-    if (texto  && !l.descricao.toLowerCase().includes(texto) &&
-                  !l.fornecedor.toLowerCase().includes(texto)) return false;
+    if (texto  && !l.descricao.toLowerCase().includes(texto) && !l.fornecedor.toLowerCase().includes(texto)) return false;
     return true;
   });
 
-  document.getElementById("filtroCount").textContent = filtrados.length + " registros";
-  paginaAtual = 1;
-  renderTabela();
+  const cnt = document.getElementById("fx-count");
+  if (cnt) cnt.textContent = fluxoFiltrados.length + " registros";
+  fluxoPagina = 1;
+  fluxoRenderTabela();
 }
 
-function limparFiltros() {
-  document.getElementById("filtroCompetencia").value = "";
-  document.getElementById("filtroCategoria").value   = "";
-  document.getElementById("filtroStatus").value      = "";
-  document.getElementById("filtroTexto").value       = "";
-  aplicarFiltros();
+function fluxoLimparFiltros() {
+  ["fx-fil-comp","fx-fil-cat","fx-fil-status","fx-fil-texto"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  fluxoAplicarFiltros();
 }
 
-// ── TABELA ───────────────────────────────────────────────────────────────────
-function renderTabela() {
-  const total  = filtrados.length;
-  const inicio = (paginaAtual - 1) * PER_PAGE;
-  const fim    = Math.min(inicio + PER_PAGE, total);
-  const pagina = filtrados.slice(inicio, fim);
+function fluxoRenderTabela() {
+  const total  = fluxoFiltrados.length;
+  const inicio = (fluxoPagina-1) * FLUXO_PER_PAGE;
+  const fim    = Math.min(inicio + FLUXO_PER_PAGE, total);
+  const pagina = fluxoFiltrados.slice(inicio, fim);
+  const tbody  = document.getElementById("fx-tbody");
+  if (!tbody) return;
 
-  const tbody = document.getElementById("tabelaBody");
-  if (pagina.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Nenhum lançamento encontrado</td></tr>`;
-  } else {
-    tbody.innerHTML = pagina.map(l => `
-      <tr>
+  tbody.innerHTML = pagina.length === 0
+    ? `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Nenhum lançamento encontrado</td></tr>`
+    : pagina.map(l => `<tr>
         <td>${l.data}</td>
-        <td>${capitalize(l.competencia)}</td>
-        <td>${l.categoria || "—"}</td>
-        <td style="color:var(--text3)">${l.subcategoria || "—"}</td>
-        <td class="main">${l.descricao || "—"}</td>
-        <td>${l.fornecedor || "—"}</td>
-        <td style="color:var(--text3)">${l.notaFiscal || "—"}</td>
-        <td class="valor" style="text-align:right">${fmt(l.valor)}</td>
-        <td><span class="badge-pago ${l.pago ? "sim" : "nao"}">${l.pago ? "✓ Pago" : "⏳ Pendente"}</span></td>
-      </tr>
-    `).join("");
-  }
+        <td>${l.competencia.charAt(0)+l.competencia.slice(1).toLowerCase()}</td>
+        <td>${l.categoria||"—"}</td>
+        <td style="color:var(--text3)">${l.subcategoria||"—"}</td>
+        <td class="main">${l.descricao||"—"}</td>
+        <td>${l.fornecedor||"—"}</td>
+        <td style="color:var(--text3)">${l.notaFiscal||"—"}</td>
+        <td class="valor" style="text-align:right">${fluxoFmt(l.valor)}</td>
+        <td><span class="fx-badge-pago ${l.pago?"sim":"nao"}">${l.pago?"✓ Pago":"⏳ Pendente"}</span></td>
+      </tr>`).join("");
 
-  document.getElementById("tableInfo").textContent =
-    `Mostrando ${inicio+1}–${fim} de ${total} registros`;
-
-  renderPaginacao(total);
+  const info = document.getElementById("fx-table-info");
+  if (info) info.textContent = `Mostrando ${inicio+1}–${fim} de ${total} registros`;
+  fluxoRenderPaginacao(total);
 }
 
-function renderPaginacao(total) {
-  const totalPags = Math.ceil(total / PER_PAGE);
-  const el = document.getElementById("pagination");
+function fluxoRenderPaginacao(total) {
+  const totalPags = Math.ceil(total / FLUXO_PER_PAGE);
+  const el = document.getElementById("fx-pagination");
+  if (!el) return;
   if (totalPags <= 1) { el.innerHTML = ""; return; }
-
-  let html = `<button class="page-btn" onclick="irPagina(${paginaAtual-1})" ${paginaAtual===1?"disabled":""}><i class="ti ti-chevron-left"></i></button>`;
-  for (let p = 1; p <= totalPags; p++) {
-    if (totalPags > 7 && Math.abs(p - paginaAtual) > 2 && p !== 1 && p !== totalPags) {
-      if (p === 2 || p === totalPags-1) html += `<span style="padding:0 4px;color:var(--text3)">…</span>`;
+  let html = `<button class="fx-page-btn" onclick="fluxoIrPagina(${fluxoPagina-1})" ${fluxoPagina===1?"disabled":""}><i class="ti ti-chevron-left"></i></button>`;
+  for (let p=1; p<=totalPags; p++) {
+    if (totalPags>7 && Math.abs(p-fluxoPagina)>2 && p!==1 && p!==totalPags) {
+      if (p===2||p===totalPags-1) html+=`<span style="padding:0 4px;color:var(--text3)">…</span>`;
       continue;
     }
-    html += `<button class="page-btn ${p===paginaAtual?"active":""}" onclick="irPagina(${p})">${p}</button>`;
+    html+=`<button class="fx-page-btn ${p===fluxoPagina?"active":""}" onclick="fluxoIrPagina(${p})">${p}</button>`;
   }
-  html += `<button class="page-btn" onclick="irPagina(${paginaAtual+1})" ${paginaAtual===totalPags?"disabled":""}><i class="ti ti-chevron-right"></i></button>`;
+  html+=`<button class="fx-page-btn" onclick="fluxoIrPagina(${fluxoPagina+1})" ${fluxoPagina===totalPags?"disabled":""}><i class="ti ti-chevron-right"></i></button>`;
   el.innerHTML = html;
 }
 
-function irPagina(p) {
-  paginaAtual = p;
-  renderTabela();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+function fluxoIrPagina(p) {
+  fluxoPagina = p;
+  fluxoRenderTabela();
+  document.getElementById("page-view").scrollTop = 0;
 }
 
-// ── EXPORT CSV ───────────────────────────────────────────────────────────────
-function exportarCSV() {
+function fluxoExportarCSV() {
   const header = ["Data","Competencia","Categoria","Subcategoria","Descricao","Fornecedor","NotaFiscal","Valor","Pago"];
-  const rows = filtrados.map(l => [
+  const rows = fluxoFiltrados.map(l => [
     l.data, l.competencia, l.categoria, l.subcategoria,
     `"${l.descricao}"`, `"${l.fornecedor}"`, l.notaFiscal,
-    l.valor.toFixed(2).replace(".", ","), l.pago ? "Sim" : "Não"
+    l.valor.toFixed(2).replace(".",","), l.pago?"Sim":"Não"
   ]);
-  const csv = [header, ...rows].map(r => r.join(";")).join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const csv  = [header,...rows].map(r=>r.join(";")).join("\n");
+  const blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
-  a.href = url; a.download = "fluxo-caixa.csv"; a.click();
+  a.href=url; a.download="fluxo-caixa.csv"; a.click();
   URL.revokeObjectURL(url);
 }
 
-// ── ESTADOS ──────────────────────────────────────────────────────────────────
-function mostrarEstado(estado) {
-  document.getElementById("loadingState").style.display = estado === "loading" ? "flex" : "none";
-  document.getElementById("mainContent").style.display  = estado === "main"    ? "block" : "none";
-  document.getElementById("errorState").style.display   = estado === "error"   ? "flex"  : "none";
+function fluxoMostrarEstado(estado) {
+  const loading = document.getElementById("fx-loading");
+  const main    = document.getElementById("fx-main");
+  const error   = document.getElementById("fx-error");
+  if (loading) loading.style.display = estado==="loading" ? "flex"  : "none";
+  if (main)    main.style.display    = estado==="main"    ? "block" : "none";
+  if (error)   error.style.display   = estado==="error"   ? "flex"  : "none";
 }
 
-function mostrarErro(msg) {
-  document.getElementById("errorMsg").textContent = msg;
-  mostrarEstado("error");
-  document.getElementById("btnRefresh").classList.remove("loading");
+function fluxoMostrarErro(msg) {
+  const el = document.getElementById("fx-error-msg");
+  if (el) el.textContent = msg;
+  fluxoMostrarEstado("error");
 }
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function mesLabel(mesAno) {
+function fluxoFmt(v) {
+  return "R$ " + (v||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fluxoPctFmt(v) { return (v*100).toFixed(1)+"%"; }
+function fluxoMesLabel(mesAno) {
   const [m] = mesAno.split("/");
   const nomes = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   return nomes[parseInt(m)] || mesAno;
 }
-
-// ← aqui termina o código do fluxo
-
-} // ← fecha a função renderFluxoCaixa
 
 </script>
 </body>
