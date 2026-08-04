@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<!-- 
+  Vende-C Plataforma Financeira
+  Versão: 2.8
+  Atualizado: 04/08/2026
+  Módulos: Contas a Pagar, Contas a Receber, Aprovações, Pgtos Programados, Relatórios
+  Base de dados: Supabase (jlhvdcttbdpxntzxnsge)
+-->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -1594,6 +1601,13 @@ function renderFluxoCaixa() {
       .fxf-ac-drop.open { display:block; }
       .fxf-ac-item { padding:6px 10px;font-size:11px;color:var(--text2);cursor:pointer; }
       .fxf-ac-item:hover { background:var(--bg3);color:var(--text); }
+      .fxf-sel-wrap { position:relative; }
+      .fxf-sel-input { width:100%;font-size:10px;padding:3px 5px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--font-body);box-sizing:border-box; }
+      .fxf-sel-drop { display:none;position:absolute;top:100%;left:0;right:0;min-width:160px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;z-index:300;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.15); }
+      .fxf-sel-drop.open { display:block; }
+      .fxf-sel-opt { padding:6px 10px;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap; }
+      .fxf-sel-opt:hover { background:var(--bg3); }
+      .fxf-sel-opt.selected { color:var(--red);font-weight:600; }
       @media(max-width:560px){ .fx-kpi-grid{grid-template-columns:1fr;} }
     `;
     document.head.appendChild(s);
@@ -1763,23 +1777,32 @@ function renderFluxoCaixa() {
                       <input id="fxf-data-ate" type="date" title="Até" onchange="fluxoFiltroColuna()" style="width:50%;font-size:9px;padding:3px 3px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--font-body)"/>
                     </div>
                   </th>
-                  <!-- Competência: select com lista -->
+                  <!-- Competência: searchable select -->
                   <th style="padding:4px 6px">
-                    <select id="fxf-comp" onchange="fluxoFiltroColuna()" style="width:100%;font-size:10px;padding:3px 4px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--font-body)">
-                      <option value="">Todos</option>
-                    </select>
+                    <div class="fxf-sel-wrap" id="fxf-comp-wrap">
+                      <input class="fxf-sel-input" id="fxf-comp-txt" placeholder="Compet..." autocomplete="off"
+                        oninput="fxfFiltrarSel('comp')" onfocus="fxfAbrirSel('comp')" onblur="setTimeout(()=>fxfFecharSel('comp'),200)"/>
+                      <input type="hidden" id="fxf-comp"/>
+                      <div class="fxf-sel-drop" id="fxf-comp-drop"></div>
+                    </div>
                   </th>
-                  <!-- Categoria: select com lista -->
+                  <!-- Categoria: searchable select -->
                   <th style="padding:4px 6px">
-                    <select id="fxf-cat" onchange="fluxoFiltroColuna()" style="width:100%;font-size:10px;padding:3px 4px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--font-body)">
-                      <option value="">Todas</option>
-                    </select>
+                    <div class="fxf-sel-wrap" id="fxf-cat-wrap">
+                      <input class="fxf-sel-input" id="fxf-cat-txt" placeholder="Categoria..." autocomplete="off"
+                        oninput="fxfFiltrarSel('cat')" onfocus="fxfAbrirSel('cat')" onblur="setTimeout(()=>fxfFecharSel('cat'),200)"/>
+                      <input type="hidden" id="fxf-cat"/>
+                      <div class="fxf-sel-drop" id="fxf-cat-drop"></div>
+                    </div>
                   </th>
-                  <!-- Subcategoria: select com lista -->
+                  <!-- Subcategoria: searchable select -->
                   <th style="padding:4px 6px">
-                    <select id="fxf-sub" onchange="fluxoFiltroColuna()" style="width:100%;font-size:10px;padding:3px 4px;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--font-body)">
-                      <option value="">Todas</option>
-                    </select>
+                    <div class="fxf-sel-wrap" id="fxf-sub-wrap">
+                      <input class="fxf-sel-input" id="fxf-sub-txt" placeholder="Subcat..." autocomplete="off"
+                        oninput="fxfFiltrarSel('sub')" onfocus="fxfAbrirSel('sub')" onblur="setTimeout(()=>fxfFecharSel('sub'),200)"/>
+                      <input type="hidden" id="fxf-sub"/>
+                      <div class="fxf-sel-drop" id="fxf-sub-drop"></div>
+                    </div>
                   </th>
                   <!-- Descrição: autocomplete -->
                   <th style="padding:4px 6px;position:relative">
@@ -1907,17 +1930,29 @@ async function fluxoCarregar() {
   if (btn) btn.classList.add("loading");
 
   try {
-    // Busca todos os lançamentos do Supabase
-    const params = "select=*&order=data.desc&limit=5000";
-    const r = await fetch(`${SB_URL}/rest/v1/nfs_recebidas?${params}`, {
-      headers: {
-        "apikey":        SB_KEY,
-        "Authorization": "Bearer " + SB_KEY
-      }
-    });
+    // Busca todos os lançamentos do Supabase com paginação
+    let todos = [];
+    let offset = 0;
+    const pageSize = 1000;
+    let continuar = true;
 
-    if (!r.ok) throw new Error("Supabase erro: " + r.status);
-    const rows = await r.json();
+    while (continuar) {
+      const params = `select=*&order=data.desc&limit=${pageSize}&offset=${offset}`;
+      const r = await fetch(`${SB_URL}/rest/v1/nfs_recebidas?${params}`, {
+        headers: {
+          "apikey":        SB_KEY,
+          "Authorization": "Bearer " + SB_KEY,
+          "Prefer":        "count=exact"
+        }
+      });
+      if (!r.ok) throw new Error("Supabase erro: " + r.status);
+      const rows = await r.json();
+      todos = todos.concat(rows);
+      offset += pageSize;
+      continuar = rows.length === pageSize;
+    }
+
+    const rows = todos;
 
     // Monta estrutura compatível com o painel
     let totalGeral = 0, totalPago = 0, totalPendente = 0;
@@ -2183,9 +2218,51 @@ function fluxoLimparFiltros() {
 }
 
 // Popula os selects de coluna com valores únicos dos dados
+// Searchable selects para filtros de coluna
+const fxfOpcoes = { comp: [], cat: [], sub: [] };
+
+function fxfPopular(id, opts) {
+  fxfOpcoes[id] = opts;
+  const drop = document.getElementById("fxf-"+id+"-drop");
+  if (drop) fxfRenderDrop(id, opts);
+}
+
+function fxfRenderDrop(id, opts) {
+  const drop = document.getElementById("fxf-"+id+"-drop");
+  const val  = (document.getElementById("fxf-"+id)||{}).value||"";
+  if (!drop) return;
+  drop.innerHTML = `<div class="fxf-sel-opt${!val?" selected":""}" onmousedown="fxfSelecionar('${id}','','Todos')">Todos</div>` +
+    opts.map(o=>`<div class="fxf-sel-opt${o===val?" selected":""}" onmousedown="fxfSelecionar('${id}','${o.replace(/'/g,"\\'")}','${o.replace(/'/g,"\\'")}')"> ${o}</div>`).join("");
+}
+
+function fxfAbrirSel(id) {
+  const drop = document.getElementById("fxf-"+id+"-drop");
+  if (drop) { fxfRenderDrop(id, fxfOpcoes[id]||[]); drop.classList.add("open"); }
+}
+
+function fxfFecharSel(id) {
+  const drop = document.getElementById("fxf-"+id+"-drop");
+  if (drop) drop.classList.remove("open");
+}
+
+function fxfFiltrarSel(id) {
+  const txt  = ((document.getElementById("fxf-"+id+"-txt")||{}).value||"").toLowerCase();
+  const opts = (fxfOpcoes[id]||[]).filter(o => o.toLowerCase().includes(txt));
+  const drop = document.getElementById("fxf-"+id+"-drop");
+  if (drop) { fxfRenderDrop(id, opts); drop.classList.add("open"); }
+}
+
+function fxfSelecionar(id, val, label) {
+  const inp = document.getElementById("fxf-"+id);
+  const txt = document.getElementById("fxf-"+id+"-txt");
+  if (inp) inp.value = val;
+  if (txt) txt.value = val ? label : "";
+  fxfFecharSel(id);
+  fluxoFiltroColuna();
+}
+
 function fluxoPopularFiltrosColunas() {
   if (!fluxoAllData) return;
-
   const items = fluxoAllData.lancamentos;
   const unique = (arr) => [...new Set(arr.filter(v => v && String(v).trim()).map(s=>String(s).trim()))].sort();
 
@@ -2193,23 +2270,20 @@ function fluxoPopularFiltrosColunas() {
   const cats  = unique(items.map(l => l.categoria));
   const subs  = unique(items.map(l => l.subcategoria));
 
+  fxfPopular("comp", comps);
+  fxfPopular("cat",  cats);
+  fxfPopular("sub",  subs);
+
+  // Popula também os selects da barra de filtro superior
   const fillSel = (id, label, opts) => {
     const el = document.getElementById(id);
-    if (!el) return false;
+    if (!el) return;
     const cur = el.value;
     el.innerHTML = `<option value="">${label}</option>` + opts.map(o=>`<option value="${o}">${o}</option>`).join("");
     if (cur) el.value = cur;
-    return true;
   };
-
-  const ok1 = fillSel("fxf-comp", "Todos", comps);
-  const ok2 = fillSel("fxf-cat",  "Todas", cats);
-  const ok3 = fillSel("fxf-sub",  "Todas", subs);
   fillSel("fx-fil-comp", "Todos", comps);
   fillSel("fx-fil-cat",  "Todas", cats);
-
-  // Se os selects de coluna não estavam no DOM, tenta de novo
-  if (!ok1 || !ok2 || !ok3) setTimeout(fluxoPopularFiltrosColunas, 500);
 }
 
 // Autocomplete para Descrição e Fornecedor
@@ -2278,9 +2352,12 @@ function fluxoLimparFiltrosColunas() {
   ["fxf-data-de","fxf-data-ate","fxf-nf","fxf-med","fxf-desc","fxf-forn"].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = "";
   });
-  ["fxf-comp","fxf-cat","fxf-sub","fxf-status"].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = "";
+  // Limpa searchable selects
+  ["comp","cat","sub"].forEach(id => {
+    const inp = document.getElementById("fxf-"+id); if (inp) inp.value = "";
+    const txt = document.getElementById("fxf-"+id+"-txt"); if (txt) txt.value = "";
   });
+  ["fxf-status"].forEach(id => { const el=document.getElementById(id); if(el) el.value=""; });
   fluxoFiltrosColuna = {};
   fluxoPagina = 1;
   fluxoRenderTabela();
